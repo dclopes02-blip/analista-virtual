@@ -1,0 +1,181 @@
+contexto_geral:
+  nome_base: "Superstore Retail Analytics (DuckDB)"
+  descricao: "Base histórica de vendas de varejo nos Estados Unidos, modelada em esquema estrela."
+  periodo_disponivel: "2014-01-03 a 2017-12-30"
+  moeda: "USD (dólares americanos - exibir sempre como US$)"
+  dialeto_sql: "DuckDB"
+  dados_nao_disponiveis:
+    - "Nomes de clientes (removidos por privacidade; existe apenas customer_id)"
+    - "Devoluções ou status de cancelamento de pedidos"
+    - "Estoque, fornecedores ou campanhas de marketing"
+    - "Dados fora do período de 2014 a 2017 ou fora dos Estados Unidos"
+
+tabelas:
+  fato_vendas:
+    descricao: "Tabela fato com granularidade de um registro por item de pedido."
+    chave: [row_id]
+    colunas:
+      row_id: "INTEGER. Identificador único da linha do item de pedido (chave primária)."
+      order_id: "VARCHAR. Identificador do pedido (um pedido pode ter vários itens/linhas)."
+      order_date: "DATE. Data em que o pedido foi realizado (2014-01-03 a 2017-12-30)."
+      ship_date: "DATE. Data em que o pedido foi enviado (sempre >= order_date)."
+      ship_mode: "VARCHAR. Modalidade de envio. Valores exatos: 'Standard Class', 'Second Class', 'First Class', 'Same Day'."
+      customer_id: "VARCHAR. Chave estrangeira para dim_clientes.customer_id."
+      product_sk: "INTEGER. Chave estrangeira substituta para dim_produtos.product_sk."
+      location_sk: "INTEGER. Chave estrangeira substituta para dim_localizacao.location_sk."
+      sales: "DOUBLE. Valor monetário total da linha em US$, já considerando quantidade e desconto. NUNCA multiplicar por quantity."
+      quantity: "INTEGER. Quantidade de unidades vendidas do item na linha."
+      discount: "DOUBLE. Percentual de desconto em formato decimal entre 0.0 (0%) e 0.80 (80%)."
+      profit: "DOUBLE. Lucro líquido da linha em US$. Pode ser negativo, indicando prejuízo."
+
+  dim_clientes:
+    descricao: "Dimensão anonimizada de clientes (um registro por cliente único)."
+    chave: [customer_id]
+    colunas:
+      customer_id: "VARCHAR. Identificador único do cliente (chave primária)."
+      segment: "VARCHAR. Segmento de mercado do cliente. Valores exatos: 'Consumer', 'Corporate', 'Home Office'."
+
+  dim_produtos:
+    descricao: "Dimensão de catálogo de produtos com chave substituta."
+    chave: [product_sk]
+    colunas:
+      product_sk: "INTEGER. Chave primária substituta. Usar sempre esta coluna nos JOINs com fato_vendas."
+      product_id: "VARCHAR. Código comercial do produto (pode se repetir para nomes diferentes; NÃO usar para JOIN)."
+      category: "VARCHAR. Categoria principal do produto. Valores exatos: 'Furniture', 'Office Supplies', 'Technology'."
+      sub_category: "VARCHAR. Subcategoria do produto. Valores exatos: 'Accessories', 'Appliances', 'Art', 'Binders', 'Bookcases', 'Chairs', 'Copiers', 'Envelopes', 'Fasteners', 'Furnishings', 'Labels', 'Machines', 'Paper', 'Phones', 'Storage', 'Supplies', 'Tables'."
+      product_name: "VARCHAR. Nome descritivo do produto."
+
+  dim_localizacao:
+    descricao: "Dimensão geográfica de entrega nos Estados Unidos com chave substituta."
+    chave: [location_sk]
+    colunas:
+      location_sk: "INTEGER. Chave primária substituta. Usar sempre esta coluna nos JOINs com fato_vendas."
+      postal_code: "VARCHAR. Código postal americano com 5 dígitos (NÃO usar para JOIN)."
+      city: "VARCHAR. Nome da cidade em inglês (ex.: 'New York City', 'Los Angeles', 'Seattle')."
+      state: "VARCHAR. Nome do estado americano em inglês (ex.: 'California', 'New York', 'Texas')."
+      region: "VARCHAR. Região dos EUA. Valores exatos: 'Central', 'East', 'South', 'West'."
+      country: "VARCHAR. País da venda (valor único: 'United States')."
+
+relacionamentos:
+  - "fato_vendas.customer_id = dim_clientes.customer_id"
+  - "fato_vendas.product_sk = dim_produtos.product_sk"
+  - "fato_vendas.location_sk = dim_localizacao.location_sk"
+
+metricas:
+  faturamento:
+    descricao: "Receita total de vendas em US$ (soma direta de sales, sem multiplicar por quantity)."
+    sql: "SUM(fato_vendas.sales)"
+    unidade: "US$"
+
+  lucro_total:
+    descricao: "Lucro líquido acumulado em US$ (soma de profit, podendo resultar em valor negativo/prejuízo)."
+    sql: "SUM(fato_vendas.profit)"
+    unidade: "US$"
+
+  margem_lucro:
+    descricao: "Margem de lucro percentual sobre o faturamento (lucro total dividido pelo faturamento total, em %)."
+    sql: "ROUND(100.0 * SUM(fato_vendas.profit) / NULLIF(SUM(fato_vendas.sales), 0), 2)"
+    unidade: "%"
+
+  quantidade_pedidos:
+    descricao: "Total de pedidos únicos realizados (conta order_id distintos, não linhas)."
+    sql: "COUNT(DISTINCT fato_vendas.order_id)"
+    unidade: "pedidos"
+
+  quantidade_itens_vendidos:
+    descricao: "Total de unidades físicas vendidas."
+    sql: "SUM(fato_vendas.quantity)"
+    unidade: "unidades"
+
+  quantidade_clientes:
+    descricao: "Total de clientes únicos que realizaram compras."
+    sql: "COUNT(DISTINCT fato_vendas.customer_id)"
+    unidade: "clientes"
+
+  ticket_medio:
+    descricao: "Valor médio faturado por pedido único em US$."
+    sql: "ROUND(SUM(fato_vendas.sales) / NULLIF(COUNT(DISTINCT fato_vendas.order_id), 0), 2)"
+    unidade: "US$/pedido"
+
+  desconto_medio:
+    descricao: "Desconto médio aplicado nos itens em percentual (%)."
+    sql: "ROUND(100.0 * AVG(fato_vendas.discount), 2)"
+    unidade: "%"
+
+  prazo_medio_envio_dias:
+    descricao: "Tempo médio, em dias, entre a data do pedido e a data de envio."
+    sql: "ROUND(AVG(DATEDIFF('day', fato_vendas.order_date, fato_vendas.ship_date)), 2)"
+    unidade: "dias"
+
+sinonimos:
+  metricas:
+    faturamento: ["vendas", "receita", "receita total", "valor vendido", "quanto vendemos", "sales"]
+    lucro_total: ["lucro", "resultado", "prejuízo", "ganho líquido", "profit"]
+    margem_lucro: ["margem", "rentabilidade", "lucratividade", "percentual de lucro"]
+    quantidade_pedidos: ["número de pedidos", "total de pedidos", "pedidos únicos", "quantos pedidos"]
+    quantidade_itens_vendidos: ["volume vendido", "unidades vendidas", "quantidade vendida"]
+    quantidade_clientes: ["clientes ativos", "total de clientes", "clientes únicos"]
+    ticket_medio: ["tíquete médio", "valor médio por pedido", "média por pedido"]
+    desconto_medio: ["média de desconto", "desconto aplicado"]
+    prazo_medio_envio_dias: ["tempo de entrega", "prazo de envio", "lead time", "dias para envio", "tempo de despacho"]
+
+  valores_categoricos:
+    category:
+      "Móveis": "Furniture"
+      "Mobiliário": "Furniture"
+      "Material de Escritório": "Office Supplies"
+      "Suprimentos de Escritório": "Office Supplies"
+      "Papelaria": "Office Supplies"
+      "Tecnologia": "Technology"
+    sub_category:
+      "Acessórios": "Accessories"
+      "Eletrodomésticos": "Appliances"
+      "Arte": "Art"
+      "Fichários": "Binders"
+      "Estantes": "Bookcases"
+      "Cadeiras": "Chairs"
+      "Copiadoras": "Copiers"
+      "Envelopes": "Envelopes"
+      "Fixadores": "Fasteners"
+      "Mobiliário auxiliar": "Furnishings"
+      "Etiquetas": "Labels"
+      "Máquinas": "Machines"
+      "Papel": "Paper"
+      "Telefones": "Phones"
+      "Armazenamento": "Storage"
+      "Suprimentos": "Supplies"
+      "Mesas": "Tables"
+    segment:
+      "Consumidor": "Consumer"
+      "Consumidor final": "Consumer"
+      "Pessoa Física": "Consumer"
+      "Corporativo": "Corporate"
+      "Empresas": "Corporate"
+      "Home Office": "Home Office"
+      "Escritório em Casa": "Home Office"
+    region:
+      "Centro": "Central"
+      "Central": "Central"
+      "Leste": "East"
+      "Sul": "South"
+      "Oeste": "West"
+    ship_mode:
+      "Padrão": "Standard Class"
+      "Classe Padrão": "Standard Class"
+      "Segunda Classe": "Second Class"
+      "Primeira Classe": "First Class"
+      "Mesmo Dia": "Same Day"
+
+regras_de_negocio:
+  - "A coluna sales já representa o valor total da linha com desconto aplicado; NUNCA calcular SUM(sales * quantity)."
+  - "Todos os valores monetários estão em dólares americanos (US$); não converter para reais."
+  - "Para contar pedidos, usar sempre COUNT(DISTINCT order_id), pois um pedido pode ter múltiplos itens."
+  - "Nos JOINs com dim_produtos e dim_localizacao, usar sempre product_sk e location_sk; NUNCA fazer JOIN por product_id ou postal_code."
+  - "A coluna discount está em formato decimal (0.0 a 0.80). Para filtrar descontos acima de 20%, usar discount > 0.20 (e nunca discount > 20)."
+  - "A margem de lucro agregada deve sempre ser calculada como razão das somas: SUM(profit) / NULLIF(SUM(sales), 0), e nunca como média de margens por linha."
+  - "Ao identificar categorias, subcategorias ou estados com prejuízo, avaliar o lucro líquido agregado (SUM(profit) < 0), salvo quando o usuário pedir explicitamente apenas itens individuais com prejuízo."
+  - "Os valores de texto no banco estão em inglês (ex.: 'Furniture', 'West', 'Consumer'). Traduzir termos da pergunta em português usando o mapa valores_categoricos antes de montar cláusulas WHERE."
+  - "Usar funções compatíveis com DuckDB para datas: EXTRACT(YEAR FROM order_date) ou YEAR(order_date), DATE_TRUNC('quarter', order_date) e DATEDIFF('day', order_date, ship_date)."
+  - "Se a pergunta mencionar dados fora de 2014–2017, outros países, devoluções, estoque ou nomes de clientes, classificar como fora de escopo e recusar educadamente."
+  - "Em análises de variação percentual entre períodos (crescimento ou queda), utilize sempre a fórmula com sinal: ROUND(100.0 * (valor_atual - valor_anterior) / NULLIF(valor_anterior, 0), 2), mantendo positivo para crescimento e negativo para queda."
+  - "Em consultas de variação percentual entre períodos ou participação percentual, inclua sempre na saída os valores absolutos de base (por exemplo, os valores de cada período comparado) junto ao percentual para dar contexto de escala à análise."

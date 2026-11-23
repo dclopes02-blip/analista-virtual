@@ -1,0 +1,139 @@
+id,nivel,pergunta,acertou,motivo_avaliacao,classificacao,sql_valido_1a_tentativa,tentativas_sql,tentativas_correcao,tempo_segundos,tokens_total,modelos_usados,sql_referencia,sql_gerado,resposta_esperada,dados_obtidos,resposta_agente
+1,facil,Quantos pedidos únicos foram realizados em 2015?,True,OK,dados,True,1,0,10.97,12408,gemini-3.5-flash-lite,SELECT COUNT(DISTINCT order_id) AS quantidade_pedidos FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2015,"SELECT COUNT(DISTINCT order_id) AS quantidade_pedidos FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2015
+LIMIT 100","[{""quantidade_pedidos"": 1038}]","[{""quantidade_pedidos"": 1038}]","Em 2015, foram realizados **1.038** pedidos únicos.  Próxima sugestão de pergunta: ""Qual foi o valor total de vendas gerado nesses pedidos em 2015?"""
+2,facil,Qual foi o total de unidades vendidas em 2014?,True,OK,dados,True,1,0,7.66,12371,gemini-3.5-flash-lite,SELECT SUM(quantity) AS quantidade_itens_vendidos FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2014,"SELECT SUM(quantity) AS quantidade_itens_vendidos FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2014
+LIMIT 100","[{""quantidade_itens_vendidos"": 7579.0}]","[{""quantidade_itens_vendidos"": 7579}]",O total de unidades vendidas no ano de 2014 foi de **7.579** itens.  *Ressalva: O resultado refere-se exclusivamente aos dados consolidados de vendas para o ano de 2014.*  **Próxima sugestão de negócio:** Qual foi o total de unidades vendidas em cada trimestre de 2014 para avaliar a sazonalidade do período?
+3,facil,Quantos clientes únicos existem cadastrados na base?,True,OK,dados,True,1,0,9.09,12161,gemini-3.5-flash-lite,SELECT COUNT(DISTINCT customer_id) AS quantidade_clientes FROM dim_clientes,"SELECT COUNT(DISTINCT customer_id) AS quantidade_clientes FROM dim_clientes
+LIMIT 100","[{""quantidade_clientes"": 793}]","[{""quantidade_clientes"": 793}]","Existem **793** clientes únicos cadastrados na base de dados.  Sugestão de próxima pergunta: ""Qual é a distribuição desses clientes únicos por estado ou país?"""
+4,facil,Qual foi o desconto médio percentual aplicado nos itens vendidos em 2017?,True,OK,dados,True,1,0,10.86,12580,gemini-3.5-flash-lite,"SELECT ROUND(100.0 * AVG(discount), 2) AS desconto_medio_pct FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2017","SELECT ROUND(100.0 * AVG(discount), 2) AS desconto_medio_percentual FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2017
+LIMIT 100","[{""desconto_medio_pct"": 15.65}]","[{""desconto_medio_percentual"": 15.65}]","O desconto médio percentual aplicado nos itens vendidos em 2017 foi de `15,65%`.  *Ressalva: O resultado refere-se exclusivamente aos pedidos realizados no ano de 2017.*  **Sugestão de próxima pergunta:** Qual foi o desconto médio percentual aplicado por categoria de produto em 2017?"
+5,facil,Quantos pedidos únicos utilizaram a modalidade de envio Mesmo Dia?,True,OK,dados,True,1,0,9.36,12280,gemini-3.5-flash-lite,SELECT COUNT(DISTINCT order_id) AS quantidade_pedidos FROM fato_vendas WHERE ship_mode = 'Same Day',"SELECT COUNT(DISTINCT order_id) AS quantidade_pedidos FROM fato_vendas WHERE ship_mode = 'Same Day'
+LIMIT 100","[{""quantidade_pedidos"": 264}]","[{""quantidade_pedidos"": 264}]","Um total de **264 pedidos únicos** utilizaram a modalidade de envio ""Mesmo Dia"" (Same Day) no período de 2014 a 2017.  Qual é o valor total de vendas gerado exclusivamente pelos pedidos enviados na modalidade ""Mesmo Dia""?"
+6,facil,Qual foi o lucro total da operação no ano de 2016?,True,OK,dados,True,1,0,16.72,12423,gemini-3.5-flash-lite,"SELECT ROUND(SUM(profit), 2) AS lucro_total FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2016","SELECT ROUND(SUM(profit), 2) AS lucro_total FROM fato_vendas WHERE EXTRACT(YEAR FROM order_date) = 2016
+LIMIT 100","[{""lucro_total"": 81795.17}]","[{""lucro_total"": 81795.17}]","O lucro total da operação no ano de 2016 foi de US$ 81.795,17.  Próxima pergunta sugerida: Qual foi o lucro total da operação em cada um dos anos da base de dados (2014 a 2017) para compararmos o desempenho de 2016 com os demais períodos?"
+7,facil,Qual foi o maior faturamento registrado em uma única linha de item de pedido?,True,OK,dados,True,1,0,16.43,12844,gemini-3.5-flash-lite,"SELECT ROUND(MAX(sales), 2) AS maior_venda_item FROM fato_vendas","SELECT 
+    f.order_id,
+    f.order_date,
+    p.product_name,
+    p.category,
+    p.sub_category,
+    ROUND(f.sales, 2) AS faturamento_linha
+FROM fato_vendas f
+JOIN dim_produtos p ON f.product_sk = p.product_sk
+ORDER BY f.sales DESC
+LIMIT 1","[{""maior_venda_item"": 22638.48}]","[{""order_id"": ""CA-2014-145317"", ""order_date"": ""2014-03-18"", ""product_name"": ""Cisco TelePresence System EX90 Videoconferencing Unit"", ""category"": ""Technology"", ""sub_category"": ""Machines"", ""faturamento_linha"": 22638.48}]","O maior faturamento registrado em uma única linha de item de pedido foi de **US$ 22.638,48**.   Essa venda ocorreu em **18/03/2014** (pedido `CA-2014-145317`) e o produto comercializado foi a unidade de videoconferência **""Cisco TelePresence System EX90 Videoconferencing Unit""**, pertencente à categoria **Technology** e subcategoria **Machines**.  *Sugestão de próxima pergunta:* Qual foi o segundo maior faturamento registrado em uma única linha de item de pedido e a qual categoria ele pertence?"
+8,medio,Qual foi o faturamento por região no último trimestre de 2017?,True,OK,dados,True,1,0,14.1,13323,gemini-3.5-flash-lite,"SELECT l.region, ROUND(SUM(f.sales), 2) AS faturamento FROM fato_vendas f INNER JOIN dim_localizacao l ON f.location_sk = l.location_sk WHERE f.order_date >= DATE '2017-10-01' AND f.order_date <= DATE '2017-12-31' GROUP BY l.region ORDER BY faturamento DESC","SELECT 
+    dim_localizacao.region, 
+    ROUND(SUM(fato_vendas.sales), 2) AS faturamento 
+FROM fato_vendas 
+INNER JOIN dim_localizacao 
+    ON fato_vendas.location_sk = dim_localizacao.location_sk 
+WHERE EXTRACT(YEAR FROM fato_vendas.order_date) = 2017 
+  AND EXTRACT(QUARTER FROM fato_vendas.order_date) = 4 
+GROUP BY dim_localizacao.region 
+ORDER BY faturamento DESC
+LIMIT 100","[{""region"": ""East"", ""faturamento"": 98023.26}, {""region"": ""West"", ""faturamento"": 79806.32}, {""region"": ""South"", ""faturamento"": 56064.11}, {""region"": ""Central"", ""faturamento"": 46160.39}]","[{""region"": ""East"", ""faturamento"": 98023.26}, {""region"": ""West"", ""faturamento"": 79806.32}, {""region"": ""South"", ""faturamento"": 56064.11}, {""region"": ""Central"", ""faturamento"": 46160.39}]","No último trimestre de 2017, o faturamento total por região foi o seguinte:  1. **East**: US$ 98.023,26 2. **West**: US$ 79.806,32 3. **South**: US$ 56.064,11 4. **Central**: US$ 46.160,39  A região **East** liderou as vendas no período, enquanto a região **Central** registrou o menor faturamento.  Qual foi o faturamento por região no último trimestre de 2016 para comparar com este período?"
+9,medio,Qual foi a margem de lucro percentual de cada segmento de cliente em 2017?,True,OK,dados,True,1,0,11.86,13763,gemini-3.5-flash-lite,"SELECT c.segment, ROUND(100.0 * SUM(f.profit) / NULLIF(SUM(f.sales), 0), 2) AS margem_lucro_pct FROM fato_vendas f INNER JOIN dim_clientes c ON f.customer_id = c.customer_id WHERE EXTRACT(YEAR FROM f.order_date) = 2017 GROUP BY c.segment ORDER BY margem_lucro_pct DESC","SELECT 
+    t2.segment,
+    ROUND(100.0 * SUM(t1.profit) / NULLIF(SUM(t1.sales), 0), 2) AS margem_lucro,
+    ROUND(SUM(t1.sales), 2) AS faturamento,
+    ROUND(SUM(t1.profit), 2) AS lucro_total
+FROM fato_vendas AS t1
+JOIN dim_clientes AS t2 ON t1.customer_id = t2.customer_id
+WHERE EXTRACT(YEAR FROM t1.order_date) = 2017
+GROUP BY t2.segment
+ORDER BY margem_lucro DESC
+LIMIT 100","[{""segment"": ""Consumer"", ""margem_lucro_pct"": 13.73}, {""segment"": ""Home Office"", ""margem_lucro_pct"": 13.22}, {""segment"": ""Corporate"", ""margem_lucro_pct"": 11.07}]","[{""segment"": ""Consumer"", ""margem_lucro"": 13.73, ""faturamento"": 331904.7, ""lucro_total"": 45568.24}, {""segment"": ""Home Office"", ""margem_lucro"": 13.22, ""faturamento"": 159462.73, ""lucro_total"": 21088.67}, {""segment"": ""Corporate"", ""margem_lucro"": 11.07, ""faturamento"": 241847.82, ""lucro_total"": 26782.36}]","Em 2017, a margem de lucro percentual por segmento de cliente foi a seguinte:  1. **Consumer**: Margem de lucro de **13,73%**, com faturamento de **US$ 331.904,70** e lucro total de **US$ 45.568,24**. 2. **Home Office**: Margem de lucro de **13,22%**, com faturamento de **US$ 159.462,73** e lucro total de **US$ 21.088,67**. 3. **Corporate**: Margem de lucro de **11,07%**, com faturamento de **US$ 241.847,82** e lucro total de **US$ 26.782,36**.  *Ressalva: Os dados contemplam exclusivamente o recorte temporal do ano de 2017.*  Sugestão de próxima pergunta: Qual foi o faturamento e a margem de lucro desses mesmos segmentos de clientes no ano anterior (2016)?"
+10,medio,Quais foram as três subcategorias com maior faturamento na região Oeste?,True,OK,dados,True,1,0,11.95,12997,gemini-3.5-flash-lite,"SELECT p.sub_category, ROUND(SUM(f.sales), 2) AS faturamento FROM fato_vendas f INNER JOIN dim_produtos p ON f.product_sk = p.product_sk INNER JOIN dim_localizacao l ON f.location_sk = l.location_sk WHERE l.region = 'West' GROUP BY p.sub_category ORDER BY faturamento DESC LIMIT 3","SELECT 
+    dim_produtos.sub_category,
+    ROUND(SUM(fato_vendas.sales), 2) AS faturamento
+FROM fato_vendas
+JOIN dim_localizacao 
+    ON fato_vendas.location_sk = dim_localizacao.location_sk
+JOIN dim_produtos 
+    ON fato_vendas.product_sk = dim_produtos.product_sk
+WHERE dim_localizacao.region = 'West'
+GROUP BY dim_produtos.sub_category
+ORDER BY faturamento DESC
+LIMIT 3","[{""sub_category"": ""Chairs"", ""faturamento"": 101781.33}, {""sub_category"": ""Phones"", ""faturamento"": 98684.35}, {""sub_category"": ""Tables"", ""faturamento"": 84754.56}]","[{""sub_category"": ""Chairs"", ""faturamento"": 101781.33}, {""sub_category"": ""Phones"", ""faturamento"": 98684.35}, {""sub_category"": ""Tables"", ""faturamento"": 84754.56}]","As três subcategorias com maior faturamento na região Oeste (entre 2014 e 2017) foram:  1. **Chairs**: US$ 101.781,33 2. **Phones**: US$ 98.684,35 3. **Tables**: US$ 84.754,56  Sugestão de próxima pergunta: Quais foram as três subcategorias com menor faturamento na região Oeste?"
+11,medio,"Qual foi o prazo médio de envio, em dias, para itens da categoria Tecnologia em 2016?",True,OK,dados,True,1,0,16.67,12884,gemini-3.5-flash-lite,"SELECT ROUND(AVG(DATEDIFF('day', f.order_date, f.ship_date)), 2) AS prazo_medio_envio_dias FROM fato_vendas f INNER JOIN dim_produtos p ON f.product_sk = p.product_sk WHERE p.category = 'Technology' AND EXTRACT(YEAR FROM f.order_date) = 2016","SELECT ROUND(AVG(DATEDIFF('day', fato_vendas.order_date, fato_vendas.ship_date)), 2) AS prazo_medio_envio_dias FROM fato_vendas INNER JOIN dim_produtos ON fato_vendas.product_sk = dim_produtos.product_sk WHERE EXTRACT(YEAR FROM fato_vendas.order_date) = 2016 AND dim_produtos.category = 'Technology'
+LIMIT 100","[{""prazo_medio_envio_dias"": 3.93}]","[{""prazo_medio_envio_dias"": 3.93}]","O prazo médio de envio para itens da categoria Tecnologia em 2016 foi de **3,93 dias**.  Sugestão de próxima pergunta: Qual foi o prazo médio de envio para as demais categorias de produtos em 2016?"
+12,medio,Qual estado gerou o maior lucro total na categoria Material de Escritório em 2015?,True,OK,dados,True,1,0,10.06,13035,gemini-3.5-flash-lite,"SELECT l.state, ROUND(SUM(f.profit), 2) AS lucro_total FROM fato_vendas f INNER JOIN dim_produtos p ON f.product_sk = p.product_sk INNER JOIN dim_localizacao l ON f.location_sk = l.location_sk WHERE p.category = 'Office Supplies' AND EXTRACT(YEAR FROM f.order_date) = 2015 GROUP BY l.state ORDER BY lucro_total DESC LIMIT 1","SELECT 
+    l.state,
+    ROUND(SUM(f.profit), 2) AS lucro_total
+FROM fato_vendas AS f
+JOIN dim_localizacao AS l ON f.location_sk = l.location_sk
+JOIN dim_produtos AS p ON f.product_sk = p.product_sk
+WHERE EXTRACT(YEAR FROM f.order_date) = 2015
+  AND p.category = 'Office Supplies'
+GROUP BY l.state
+ORDER BY lucro_total DESC
+LIMIT 1","[{""state"": ""California"", ""lucro_total"": 6603.83}]","[{""state"": ""California"", ""lucro_total"": 6603.83}]","O estado que gerou o maior lucro total na categoria Material de Escritório em 2015 foi a **California**, com um lucro total de **US$ 6.603,83**.  Sugestão de próxima pergunta: Qual foi o produto mais vendido dentro da categoria Material de Escritório na California em 2015?"
+13,medio,Qual foi o tíquete médio por pedido no segmento Corporativo em 2017?,True,OK,dados,True,1,0,17.43,12743,gemini-3.5-flash-lite,"SELECT ROUND(SUM(f.sales) / NULLIF(COUNT(DISTINCT f.order_id), 0), 2) AS ticket_medio FROM fato_vendas f INNER JOIN dim_clientes c ON f.customer_id = c.customer_id WHERE c.segment = 'Corporate' AND EXTRACT(YEAR FROM f.order_date) = 2017","SELECT ROUND(SUM(f.sales) / NULLIF(COUNT(DISTINCT f.order_id), 0), 2) AS ticket_medio FROM fato_vendas AS f JOIN dim_clientes AS c ON f.customer_id = c.customer_id WHERE EXTRACT(YEAR FROM f.order_date) = 2017 AND c.segment = 'Corporate'
+LIMIT 100","[{""ticket_medio"": 490.56}]","[{""ticket_medio"": 490.56}]","O tíquete médio por pedido no segmento Corporativo em 2017 foi de **US$ 490,56**.  Sugestão de próxima pergunta: Qual foi o valor total de vendas para o segmento Corporativo em 2017?"
+14,medio,Quantos pedidos únicos foram realizados no estado do Texas com desconto acima de 20%?,True,OK,dados,True,1,0,14.32,12618,gemini-3.5-flash-lite,SELECT COUNT(DISTINCT f.order_id) AS quantidade_pedidos FROM fato_vendas f INNER JOIN dim_localizacao l ON f.location_sk = l.location_sk WHERE l.state = 'Texas' AND f.discount > 0.20,"SELECT COUNT(DISTINCT f.order_id) AS quantidade_pedidos
+FROM fato_vendas AS f
+JOIN dim_localizacao AS d ON f.location_sk = d.location_sk
+WHERE d.state = 'Texas' AND f.discount > 0.20
+LIMIT 100","[{""quantidade_pedidos"": 288}]","[{""quantidade_pedidos"": 288}]",Foram realizados **288** pedidos únicos no estado do Texas com desconto acima de 20%.  Sugestão de próxima pergunta: Qual foi o valor total de vendas gerado por esses pedidos com desconto acima de 20% no Texas?
+15,dificil,Quais 5 subcategorias mais cresceram percentualmente em faturamento de 2016 para 2017?,True,OK,dados,True,1,0,10.11,14778,gemini-3.5-flash-lite,"WITH vendas_ano AS (  SELECT p.sub_category,     SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2016 THEN f.sales ELSE 0 END) AS sales_2016,     SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2017 THEN f.sales ELSE 0 END) AS sales_2017   FROM fato_vendas f   INNER JOIN dim_produtos p ON f.product_sk = p.product_sk   WHERE EXTRACT(YEAR FROM f.order_date) IN (2016, 2017)   GROUP BY p.sub_category) SELECT sub_category,   ROUND(sales_2016, 2) AS sales_2016,   ROUND(sales_2017, 2) AS sales_2017,   ROUND(100.0 * (sales_2017 - sales_2016) / NULLIF(sales_2016, 0), 2) AS crescimento_pct FROM vendas_ano WHERE sales_2016 > 0 ORDER BY crescimento_pct DESC LIMIT 5","SELECT 
+    p.sub_category,
+    ROUND(SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2016 THEN f.sales ELSE 0 END), 2) AS faturamento_2016,
+    ROUND(SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2017 THEN f.sales ELSE 0 END), 2) AS faturamento_2017,
+    ROUND(100.0 * (
+        SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2017 THEN f.sales ELSE 0 END) - 
+        SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2016 THEN f.sales ELSE 0 END)
+    ) / NULLIF(SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2016 THEN f.sales ELSE 0 END), 0), 2) AS crescimento_percentual
+FROM fato_vendas f
+JOIN dim_produtos p ON f.product_sk = p.product_sk
+WHERE EXTRACT(YEAR FROM f.order_date) IN (2016, 2017)
+GROUP BY p.sub_category
+ORDER BY crescimento_percentual DESC
+LIMIT 5","[{""sub_category"": ""Appliances"", ""sales_2016"": 26050.32, ""sales_2017"": 42926.93, ""crescimento_pct"": 64.78}, {""sub_category"": ""Art"", ""sales_2016"": 5960.91, ""sales_2017"": 8863.07, ""crescimento_pct"": 48.69}, {""sub_category"": ""Binders"", ""sales_2016"": 49683.32, ""sales_2017"": 72788.05, ""crescimento_pct"": 46.5}, {""sub_category"": ""Accessories"", ""sales_2016"": 41895.85, ""sales_2017"": 59946.23, ""crescimento_pct"": 43.08}, {""sub_category"": ""Labels"", ""sales_2016"": 2827.24, ""sales_2017"": 3861.22, ""crescimento_pct"": 36.57}]","[{""sub_category"": ""Appliances"", ""faturamento_2016"": 26050.32, ""faturamento_2017"": 42926.93, ""crescimento_percentual"": 64.78}, {""sub_category"": ""Art"", ""faturamento_2016"": 5960.91, ""faturamento_2017"": 8863.07, ""crescimento_percentual"": 48.69}, {""sub_category"": ""Binders"", ""faturamento_2016"": 49683.32, ""faturamento_2017"": 72788.05, ""crescimento_percentual"": 46.5}, {""sub_category"": ""Accessories"", ""faturamento_2016"": 41895.85, ""faturamento_2017"": 59946.23, ""crescimento_percentual"": 43.08}, {""sub_category"": ""Labels"", ""faturamento_2016"": 2827.24, ""faturamento_2017"": 3861.22, ""crescimento_percentual"": 36.57}]","As 5 subcategorias que mais cresceram percentualmente em faturamento de 2016 para 2017 foram:  1. **Appliances**: cresceu **64,78%**, passando de US$ 26.050,32 em 2016 para US$ 42.926,93 em 2017. 2. **Art**: cresceu **48,69%**, passando de US$ 5.960,91 em 2016 para US$ 8.863,07 em 2017. 3. **Binders**: cresceu **46,50%**, passando de US$ 49.683,32 em 2016 para US$ 72.788,05 em 2017. 4. **Accessories**: cresceu **43,08%**, passando de US$ 41.895,85 em 2016 para US$ 59.946,23 em 2017. 5. **Labels**: cresceu **36,57%**, passando de US$ 2.827,24 em 2016 para US$ 3.861,22 em 2017.  *Ressalva: A análise restringe-se exclusivamente aos dados de faturamento dos anos de 2016 e 2017.*  Sugestão de próxima pergunta: ""Quais foram as 5 subcategorias com maior queda percentual em faturamento de 2016 para 2017?"""
+16,dificil,Qual foi a participação percentual de cada categoria no faturamento total de 2017?,True,OK,dados,True,1,0,17.34,13551,gemini-3.5-flash-lite,"WITH cat_2017 AS (  SELECT p.category, SUM(f.sales) AS faturamento   FROM fato_vendas f   INNER JOIN dim_produtos p ON f.product_sk = p.product_sk   WHERE EXTRACT(YEAR FROM f.order_date) = 2017   GROUP BY p.category) SELECT category,   ROUND(faturamento, 2) AS faturamento,   ROUND(100.0 * faturamento / SUM(faturamento) OVER (), 2) AS participacao_pct FROM cat_2017 ORDER BY participacao_pct DESC","SELECT 
+    p.category,
+    ROUND(SUM(f.sales), 2) AS faturamento_categoria,
+    ROUND(SUM(SUM(f.sales)) OVER (), 2) AS faturamento_total_2017,
+    ROUND(100.0 * SUM(f.sales) / SUM(SUM(f.sales)) OVER (), 2) AS participacao_percentual
+FROM fato_vendas AS f
+JOIN dim_produtos AS p ON f.product_sk = p.product_sk
+WHERE EXTRACT(YEAR FROM f.order_date) = 2017
+GROUP BY p.category
+ORDER BY participacao_percentual DESC
+LIMIT 100","[{""category"": ""Technology"", ""faturamento"": 271730.81, ""participacao_pct"": 37.06}, {""category"": ""Office Supplies"", ""faturamento"": 246097.18, ""participacao_pct"": 33.56}, {""category"": ""Furniture"", ""faturamento"": 215387.27, ""participacao_pct"": 29.38}]","[{""category"": ""Technology"", ""faturamento_categoria"": 271730.81, ""faturamento_total_2017"": 733215.26, ""participacao_percentual"": 37.06}, {""category"": ""Office Supplies"", ""faturamento_categoria"": 246097.18, ""faturamento_total_2017"": 733215.26, ""participacao_percentual"": 33.56}, {""category"": ""Furniture"", ""faturamento_categoria"": 215387.27, ""faturamento_total_2017"": 733215.26, ""participacao_percentual"": 29.38}]","No ano de 2017, o faturamento total da empresa atingiu US$ 733.215,26. A participação percentual de cada categoria foi a seguinte:  1. **Technology**: US$ 271.730,81 (37,06%) 2. **Office Supplies**: US$ 246.097,18 (33,56%) 3. **Furniture**: US$ 215.387,27 (29,38%)  *Ressalva: Os dados correspondem estritamente ao recorte temporal do ano de 2017.*  Sugestão de próxima pergunta: ""Qual foi o faturamento total e a participação percentual de cada categoria no ano anterior (2016) para compararmos a evolução?"""
+17,dificil,"Quais 3 estados tiveram a maior queda percentual de lucro de 2016 para 2017, considerando apenas estados com lucro positivo em 2016?",True,OK,dados,True,1,0,17.44,14720,gemini-3.5-flash-lite,"WITH lucro_estado AS (  SELECT l.state,     SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2016 THEN f.profit ELSE 0 END) AS profit_2016,     SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2017 THEN f.profit ELSE 0 END) AS profit_2017   FROM fato_vendas f   INNER JOIN dim_localizacao l ON f.location_sk = l.location_sk   WHERE EXTRACT(YEAR FROM f.order_date) IN (2016, 2017)   GROUP BY l.state) SELECT state,   ROUND(profit_2016, 2) AS profit_2016,   ROUND(profit_2017, 2) AS profit_2017,   ROUND(100.0 * (profit_2017 - profit_2016) / NULLIF(profit_2016, 0), 2) AS variacao_pct FROM lucro_estado WHERE profit_2016 > 0 ORDER BY variacao_pct ASC LIMIT 3","WITH lucro_por_estado AS (
+    SELECT 
+        l.state,
+        SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2016 THEN f.profit ELSE 0 END) AS lucro_2016,
+        SUM(CASE WHEN EXTRACT(YEAR FROM f.order_date) = 2017 THEN f.profit ELSE 0 END) AS lucro_2017
+    FROM fato_vendas f
+    JOIN dim_localizacao l ON f.location_sk = l.location_sk
+    WHERE EXTRACT(YEAR FROM f.order_date) IN (2016, 2017)
+    GROUP BY l.state
+)
+SELECT 
+    state,
+    ROUND(lucro_2016, 2) AS lucro_2016,
+    ROUND(lucro_2017, 2) AS lucro_2017,
+    ROUND(100.0 * (lucro_2017 - lucro_2016) / NULLIF(lucro_2016, 0), 2) AS variacao_percentual
+FROM lucro_por_estado
+WHERE lucro_2016 > 0
+ORDER BY variacao_percentual ASC
+LIMIT 3","[{""state"": ""North Carolina"", ""profit_2016"": 260.84, ""profit_2017"": -5088.53, ""variacao_pct"": -2050.82}, {""state"": ""Wyoming"", ""profit_2016"": 100.2, ""profit_2017"": 0.0, ""variacao_pct"": -100.0}, {""state"": ""Maine"", ""profit_2016"": 165.29, ""profit_2017"": 0.0, ""variacao_pct"": -100.0}]","[{""state"": ""North Carolina"", ""lucro_2016"": 260.84, ""lucro_2017"": -5088.53, ""variacao_percentual"": -2050.82}, {""state"": ""Wyoming"", ""lucro_2016"": 100.2, ""lucro_2017"": 0.0, ""variacao_percentual"": -100.0}, {""state"": ""Maine"", ""lucro_2016"": 165.29, ""lucro_2017"": 0.0, ""variacao_percentual"": -100.0}]","Os 3 estados que registraram a maior queda percentual de lucro de 2016 para 2017 (considerando apenas aqueles com lucro positivo em 2016) foram:  1. **North Carolina**: O lucro despencou de US$ 260,84 em 2016 para um prejuízo de US$ -5.088,53 em 2017, representando uma queda de **-2.050,82%**. 2. **Wyoming**: O lucro caiu de US$ 100,20 em 2016 para US$ 0,00 em 2017, uma redução de **-100,0%**. 3. **Maine**: O lucro passou de US$ 165,29 em 2016 para US$ 0,00 em 2017, registrando também uma retração de **-100,0%**.  *Ressalva: A análise foi restrita aos estados que apresentaram saldo de lucro positivo estrito no ano base de 2016.*  Qual foi a categoria de produto que mais gerou prejuízo no estado de North Carolina em 2017?"
+18,dificil,"Em 2017, quantos pedidos tiveram faturamento total acima da média de faturamento por pedido daquele mesmo ano?",True,OK,dados,True,1,0,11.65,13192,gemini-3.5-flash-lite,"WITH pedidos_2017 AS (  SELECT order_id, SUM(sales) AS total_pedido   FROM fato_vendas   WHERE EXTRACT(YEAR FROM order_date) = 2017   GROUP BY order_id) SELECT COUNT(*) AS qtd_pedidos_acima_media FROM pedidos_2017 WHERE total_pedido > (SELECT AVG(total_pedido) FROM pedidos_2017)","WITH pedido_vendas AS (
+    SELECT order_id, SUM(sales) AS total_sales
+    FROM fato_vendas
+    WHERE EXTRACT(YEAR FROM order_date) = 2017
+    GROUP BY order_id
+),
+media_pedidos AS (
+    SELECT AVG(total_sales) AS media_vendas
+    FROM pedido_vendas
+)
+SELECT COUNT(p.order_id) AS qtd_pedidos_acima_media
+FROM pedido_vendas p
+CROSS JOIN media_pedidos m
+WHERE p.total_sales > m.media_vendas
+LIMIT 100","[{""qtd_pedidos_acima_media"": 455}]","[{""qtd_pedidos_acima_media"": 455}]","Em 2017, **455 pedidos** tiveram faturamento total acima da média de faturamento por pedido daquele mesmo ano.  *Ressalva: O resultado considera o recorte temporal exclusivo do ano de 2017.*  Sugestão de próxima pergunta: Qual foi o valor médio do faturamento por pedido em 2017?"
+19,armadilha,Qual foi a taxa de devolução de pedidos e o nome do cliente que mais devolveu produtos em 2018?,True,Recusa correta (fora_de_escopo sem SQL),fora_de_escopo,,0,0,5.09,4497,gemini-3.5-flash-lite,N/A,,RECUSA: fora de escopo (base cobre 2014-2017 e não contém dados de devoluções nem nomes de clientes).,[],"Desculpe, mas a nossa base de dados contém apenas registros do período de 2014 a 2017 e não possui informações sobre devoluções ou cancelamentos de pedidos. Que tal consultar o faturamento, o lucro ou a quantidade de pedidos realizados por ano, região ou categoria entre 2014 e 2017?"
+20,armadilha,Qual foi o melhor produto da loja em 2017?,True,Esclarecimento correto (ambigua sem SQL),ambigua,,0,0,2.86,4475,gemini-3.5-flash-lite,N/A,,"ESCLARECIMENTO: pergunta ambígua (solicitar se o critério é faturamento, lucro, margem de lucro ou quantidade vendida).",[],"Para definir qual foi o melhor produto em 2017, por favor, escolha o critério desejado: - Faturamento (maior receita em US$) - Lucro Total (maior lucro líquido em US$) - Quantidade Vendida (maior volume de unidades) - Margem de Lucro (maior rentabilidade percentual)"

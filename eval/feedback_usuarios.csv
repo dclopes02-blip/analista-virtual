@@ -1,0 +1,11 @@
+﻿data_hora,pergunta,classificacao,feedback,sql_executado,modelos_usados,tokens_total,tempo_segundos,do_cache
+2026-11-22T23:26:13,Preciso visualizar os 10 produtos mais vendidos em ordem descendente com suas quantidades vendidas e o valor total de suas vendas no ano de 2014,dados,positivo,"SELECT 
+    dim_produtos.product_name,
+    SUM(fato_vendas.quantity) AS quantidade_itens_vendidos,
+    ROUND(SUM(fato_vendas.sales), 2) AS faturamento
+FROM fato_vendas
+JOIN dim_produtos ON fato_vendas.product_sk = dim_produtos.product_sk
+WHERE EXTRACT(YEAR FROM fato_vendas.order_date) = 2014
+GROUP BY dim_produtos.product_name
+ORDER BY quantidade_itens_vendidos DESC
+LIMIT 10",gemini-3.5-flash-lite,14052,9.19,False
